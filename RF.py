@@ -19,13 +19,13 @@ dataset_G = create_dataset("/home/changjirui/rework/dataset_2/G/")
 dataset_K = create_dataset("/home/changjirui/rework/dataset_2/K/")
 
 def set_seed(seed):
-    random.seed(seed)  # Python 随机模块
-    np.random.seed(seed)  # NumPy
-    torch.manual_seed(seed)  # PyTorch CPU
-    torch.cuda.manual_seed(seed)  # PyTorch GPU
-    torch.cuda.manual_seed_all(seed)  # 如果使用多卡训练
-    torch.backends.cudnn.deterministic = True  # 确保 CUDNN 算法的确定性
-    torch.backends.cudnn.benchmark = False  # 禁用 CUDNN 的优化算法
+    random.seed(seed)  
+    np.random.seed(seed) 
+    torch.manual_seed(seed)  
+    torch.cuda.manual_seed(seed) 
+    torch.cuda.manual_seed_all(seed)  
+    torch.backends.cudnn.deterministic = True  
+    torch.backends.cudnn.benchmark = False  
 set_seed(173)
 
 def create_dataloader_2(WN, WC_WO, dataset_O, dataset_B, dataset_A, dataset_F, dataset_G, dataset_K, noise):
@@ -59,63 +59,40 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
 
 def train_and_evaluate_rf(train_loader, test_loader, n_estimators=100, max_depth=None, random_state=42):
-    """
-    使用随机森林训练并评估模型，返回训练集正确率、测试集正确率和测试集每类指标。
 
-    参数:
-        train_loader: 训练集的 DataLoader。
-        test_loader: 测试集的 DataLoader。
-        n_estimators: 随机森林中决策树的数量 (默认=100)。
-        max_depth: 决策树的最大深度 (默认=None，表示不限制)。
-        random_state: 随机种子 (默认=42)。
-
-    返回:
-        train_accuracy: 训练集正确率。
-        test_accuracy: 测试集正确率。
-        per_class_metrics: 每类的精确率、召回率和F1分数。
-    """
-    # 准备训练数据
     X_train, y_train = [], []
     for X_batch, y_batch in train_loader:
-        X_train.append(X_batch.view(X_batch.size(0), -1).numpy())  # 展平特征
+        X_train.append(X_batch.view(X_batch.size(0), -1).numpy())
         y_train.append(y_batch.numpy())
     X_train = np.concatenate(X_train, axis=0)
-    y_train = np.concatenate(y_train, axis=0).astype(int)  # 确保为整数
+    y_train = np.concatenate(y_train, axis=0).astype(int)  
 
-    # 准备测试数据
     X_test, y_test = [], []
     for X_batch, y_batch in test_loader:
-        X_test.append(X_batch.view(X_batch.size(0), -1).numpy())  # 展平特征
+        X_test.append(X_batch.view(X_batch.size(0), -1).numpy())  
         y_test.append(y_batch.numpy())
     X_test = np.concatenate(X_test, axis=0)
-    y_test = np.concatenate(y_test, axis=0).astype(int)  # 确保为整数
+    y_test = np.concatenate(y_test, axis=0).astype(int)  
 
-    # 初始化随机森林模型
     rf_model = RandomForestClassifier(
         n_estimators=n_estimators,
         max_depth=max_depth,
         random_state=random_state
     )
 
-    # 训练模型
     rf_model.fit(X_train, y_train)
 
-    # 预测训练集和测试集
     y_train_pred = rf_model.predict(X_train)
     y_test_pred = rf_model.predict(X_test)
 
-    # 计算训练集正确率
     train_accuracy = accuracy_score(y_train, y_train_pred)
 
-    # 计算测试集总体正确率
     test_accuracy = accuracy_score(y_test, y_test_pred)
 
-    # 计算分类报告（包含每类的Precision, Recall, F1）
     test_class_report = classification_report(
         y_test, y_test_pred, output_dict=True, zero_division=0
     )
 
-    # 提取每类的指标
     per_class_metrics = {
         class_label: {
             "precision": metrics["precision"],
@@ -123,12 +100,11 @@ def train_and_evaluate_rf(train_loader, test_loader, n_estimators=100, max_depth
             "f1-score": metrics["f1-score"],
         }
         for class_label, metrics in test_class_report.items()
-        if class_label not in ["accuracy", "macro avg", "weighted avg"]  # 排除总体指标
+        if class_label not in ["accuracy", "macro avg", "weighted avg"] 
     }
 
     return train_accuracy, test_accuracy, per_class_metrics
 
-# 调用函数并打印结果
 results = train_and_evaluate_rf(train_loader, test_loader, n_estimators=150, max_depth=10)
 print(f"训练集正确率: {results[0]:.2f}")
 print(f"测试集正确率: {results[1]:.2f}")
